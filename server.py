@@ -38,18 +38,18 @@ class ChatbotHandler(http.server.BaseHTTPRequestHandler):
 
     def do_GET(self):
         m = self._path_pattern.match(self.path)
-        if not m or m[0] != self.path:
+        if not m or m.group(0) != self.path:
             self.send_response(http.HTTPStatus.BAD_REQUEST)
             self.end_headers()
             return
 
-        if m[1] == "/chatbot/say":
+        if m.group(1) == "/chatbot/say":
             params = {}
-            if m[2]:
-                for param in urllib.parse.unquote(m[2][1:]).split("&"):
+            if m.group(2):
+                for param in urllib.parse.unquote(m.group(2)[1:]).split("&"):
                     kv = self._param_pattern.match(param)
                     if kv:
-                        params[kv[1]] = kv[2]
+                        params[kv.group(1)] = kv.group(2)
 
             content = params["content"]
             if not content:
