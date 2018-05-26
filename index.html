@@ -16,7 +16,7 @@
         document.getElementById('content').value = ""
         document.getElementById("messages").innerHTML += "you: " + content + "<br/>"
         let xhr = new XMLHttpRequest();
-        xhr.open("POST", encodeURI("http://localhost/chatbot/say?content=" + content), true);
+        xhr.open("GET", encodeURI("http://localhost/chatbot/say?content=" + content), true);
         xhr.onload = function(e) {
           if (xhr.readyState === 4) {
             if (xhr.status === 200) {
