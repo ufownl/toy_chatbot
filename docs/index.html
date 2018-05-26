@@ -32,7 +32,21 @@
         xhr.send(null);
       }
 
-      document.getElementById('server').value = "http://localhost"
+      function get_param(name) {
+        var reg = new RegExp('(^|&)' + name + '=([^&]*)(&|$)', 'i');
+        var r = window.location.search.substr(1).match(reg);
+        if (r != null) {
+          return unescape(r[2]);
+        }
+        return null;
+      }
+
+      let server = get_param("server")
+      if (server) {
+        document.getElementById('server').value = server
+      } else {
+        document.getElementById('server').value = "http://localhost"
+      }
     </script>
   </body>
 </html>
