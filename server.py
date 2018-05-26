@@ -79,6 +79,9 @@ class ChatbotHandler(http.server.BaseHTTPRequestHandler):
 
             self.send_response(http.HTTPStatus.OK)
             self.send_header("Content-Type", "text/plain; charset=utf-8")
+            self.send_header("Access-Control-Allow-Origin", "*")
+            self.send_header("Access-Control-Allow-Methods", "GET")
+            self.send_header("Access-Control-Allow-Headers", "Keep-Alive,User-Agent,Authorization,Content-Type")
             self.end_headers()
             self.wfile.write(reply.encode())
         else:
