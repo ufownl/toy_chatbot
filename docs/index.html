@@ -20,14 +20,18 @@
         let content = document.getElementById('content').value
         document.getElementById('content').value = ""
         document.getElementById("messages").innerHTML += "you: " + content + "<br/>"
+        let url = encodeURI(document.getElementById('server').value + "/chatbot/say?content=" + content)
         let xhr = new XMLHttpRequest();
-        xhr.open("GET", encodeURI(document.getElementById('server').value + "/chatbot/say?content=" + content), true);
-        xhr.onload = function(e) {
+        xhr.open("GET", url, true);
+        xhr.onload = function() {
           if (xhr.readyState === 4) {
             if (xhr.status === 200) {
               document.getElementById("messages").innerHTML += "bot: " + xhr.responseText + "<br/>"
             }
           }
+        }
+        xhr.onerror = function() {
+          document.getElementById("messages").innerHTML += "ERROR: Failed to call " + "<a href=" + url + ">" + url + "</a>" + "<br/>"
         }
         xhr.send(null);
       }
