@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>toy_chatbot</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  </head>
+  <body>
+    <div id="messages"></div>
+    <div>
+      <input type="text" id="content" onkeypress="if (event.keyCode === 13) { say() }" />
+      <input type="submit" value="say" onclick="say()" />
+    </div>
+    <script type="text/javascript">
+      function say() {
+        let content = document.getElementById('content').value
+        document.getElementById('content').value = ""
+        document.getElementById("messages").innerHTML += "you: " + content + "<br/>"
+        let xhr = new XMLHttpRequest();
+        xhr.open("GET", encodeURI("http://localhost/chatbot/say?content=" + content), true);
+        xhr.onload = function(e) {
+          if (xhr.readyState === 4) {
+            if (xhr.status === 200) {
+              document.getElementById("messages").innerHTML += "bot: " + xhr.responseText + "<br/>"
+            }
+          }
+        }
+        xhr.send(null);
+      }
+    </script>
+  </body>
+</html>
