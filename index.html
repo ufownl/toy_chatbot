@@ -5,7 +5,12 @@
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
   </head>
   <body>
-    <div id="messages"></div>
+    <div>
+      server: <input type="text" id="server" />
+    </div>
+    <div id="messages">
+      messages:<br/>
+    </div>
     <div>
       <input type="text" id="content" onkeypress="if (event.keyCode === 13) { say() }" />
       <input type="submit" value="say" onclick="say()" />
@@ -16,7 +21,7 @@
         document.getElementById('content').value = ""
         document.getElementById("messages").innerHTML += "you: " + content + "<br/>"
         let xhr = new XMLHttpRequest();
-        xhr.open("GET", encodeURI("http://localhost/chatbot/say?content=" + content), true);
+        xhr.open("GET", encodeURI(document.getElementById('server').value + "/chatbot/say?content=" + content), true);
         xhr.onload = function(e) {
           if (xhr.readyState === 4) {
             if (xhr.status === 200) {
@@ -26,6 +31,8 @@
         }
         xhr.send(null);
       }
+
+      document.getElementById('server').value = "http://localhost"
     </script>
   </body>
 </html>
