@@ -7,15 +7,16 @@ from dataset import load_conversations, dataset_filter, make_vocab
 from seq2seq_lstm import Seq2seqLSTM
 
 parser = argparse.ArgumentParser(description='Start a test http server.')
-parser.add_argument("--addr", help="set the address of chatbot server (default: 0.0.0.0)", type=str, default="0.0.0.0")
-parser.add_argument("--port", help="set the port of chatbot server (default: 80)", type=int, default=80)
+parser.add_argument("--addr", help="set address of chatbot server (default: 0.0.0.0)", type=str, default="0.0.0.0")
+parser.add_argument("--port", help="set port of chatbot server (default: 80)", type=int, default=80)
+parser.add_argument("--device_id", help="select device that the model using (default: 0)", type=int, default=0)
 parser.add_argument("--gpu", help="using gpu acceleration", action="store_true")
 args = parser.parse_args()
 
 if args.gpu:
-    context = mx.gpu()
+    context = mx.gpu(args.device_id)
 else:
-    context = mx.cpu()
+    context = mx.cpu(args.device_id)
 num_embed = 128
 num_hidden = 1024
 num_layers = 2
