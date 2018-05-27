@@ -27,11 +27,11 @@ def main(num_embed, num_hidden, num_layers, gradient_clip, batch_size, sequence_
         epoch = 0
         best_L = float("Inf")
         epochs_no_progress = 0
-        learning_rate = 0.1
+        learning_rate = 0.001
         model.initialize(mx.init.Xavier(), ctx=context)
 
     print("Training...", flush=True)
-    trainer = mx.gluon.Trainer(model.collect_params(), 'sgd', {'learning_rate': learning_rate})
+    trainer = mx.gluon.Trainer(model.collect_params(), "adam", {"learning_rate": learning_rate})
     while learning_rate >= 1e-5:
         random.shuffle(dataset)
         ts = time.time()
