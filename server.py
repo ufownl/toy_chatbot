@@ -1,3 +1,4 @@
+import sys
 import re
 import argparse
 import http.server
@@ -38,6 +39,14 @@ class ChatbotHandler(http.server.BaseHTTPRequestHandler):
     _param_pattern = re.compile("^([A-Za-z0-9_]+)=(.*)$")
 
     def do_GET(self):
+        self._handle_request()
+        sys.stdout.flush()
+        sys.stderr.flush()
+
+    def do_POST(self):
+        self.do_GET()
+
+    def _handle_request(self):
         m = self._path_pattern.match(self.path)
         if not m or m.group(0) != self.path:
             self.send_response(http.HTTPStatus.BAD_REQUEST)
@@ -58,11 +67,11 @@ class ChatbotHandler(http.server.BaseHTTPRequestHandler):
                 self.end_headers()
                 return
 
-            print("say: ", content)
+            print(args.device_id, "say:", content)
             source = [vocab.char2idx(ch) for ch in content]
             if sequence_length > len(source):
                 source += [vocab.char2idx("<PAD>")] * (sequence_length - len(source))
-            print("tokenize: ", source)
+            print(args.device_id, "tokenize:", source)
             source = mx.nd.array(source, ctx=context)
             hidden = model.begin_state(func=mx.nd.zeros, batch_size=1, ctx=context)
             hidden = model.encode(source.reshape((1, -1)).T, hidden)
@@ -75,7 +84,7 @@ class ChatbotHandler(http.server.BaseHTTPRequestHandler):
                     break;
                 target = mx.nd.array([index[-1].asscalar()], ctx=context)
                 reply += vocab.idx2char(index[-1].asscalar())
-            print("reply: ", reply)
+            print(args.device_id, "reply:", reply)
 
             self.send_response(http.HTTPStatus.OK)
             self.send_header("Content-Type", "text/plain; charset=utf-8")
@@ -88,9 +97,6 @@ class ChatbotHandler(http.server.BaseHTTPRequestHandler):
             self.send_response(http.HTTPStatus.NOT_FOUND)
             self.end_headers()
             return
-
-    def do_POST(self):
-        self.do_GET()
 
 
 httpd = http.server.HTTPServer((args.addr, args.port), ChatbotHandler)
