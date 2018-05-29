@@ -79,7 +79,8 @@ class ChatbotHandler(http.server.BaseHTTPRequestHandler):
             reply = ""
             while True:
                 output, hidden = model.decode(target.reshape((1, -1)).T, hidden)
-                index = mx.nd.argmax(output, axis=1)
+                probs = mx.nd.softmax(output, axis=1)
+                index = mx.nd.random.multinomial(probs)
                 if index[-1].asscalar() == vocab.char2idx("<EOS>"):
                     break;
                 target = mx.nd.array([index[-1].asscalar()], ctx=context)
