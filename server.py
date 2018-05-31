@@ -1,5 +1,6 @@
 import sys
 import re
+import random
 import argparse
 import http.server
 import urllib.parse
@@ -22,6 +23,7 @@ num_embed = 128
 num_hidden = 1024
 num_layers = 2
 sequence_length = 16
+beam_size = 5
 
 print("Loading dataset...", flush=True)
 dataset = dataset_filter(load_conversations("data/xiaohuangji50w_nofenci.conv"), sequence_length)
@@ -75,16 +77,28 @@ class ChatbotHandler(http.server.BaseHTTPRequestHandler):
             source = mx.nd.array(source, ctx=context)
             hidden = model.begin_state(func=mx.nd.zeros, batch_size=1, ctx=context)
             hidden = model.encode(source.reshape((1, -1)).T, hidden)
-            target = mx.nd.array([vocab.char2idx("<GO>")], ctx=context)
-            reply = ""
+            sequences = [([vocab.char2idx("<GO>")], 1.0, hidden)]
             while True:
-                output, hidden = model.decode(target.reshape((1, -1)).T, hidden)
-                probs = mx.nd.softmax(output, axis=1)
-                index = mx.nd.random.multinomial(probs)
-                if index[-1].asscalar() == vocab.char2idx("<EOS>"):
+                candidates = []
+                for seq, score, hidden in sequences:
+                    if seq[-1] == vocab.char2idx("<EOS>"):
+                        candidates.append((seq, score, hidden))
+                    else:
+                        target = mx.nd.array([seq[-1]], ctx=context)
+                        output, hidden = model.decode(target.reshape((1, -1)).T, hidden)
+                        probs = mx.nd.softmax(output, axis=1)
+                        beam = probs.reshape((-1,)).topk(k=beam_size, ret_typ="both")
+                        for i in range(beam_size):
+                            candidates.append((seq + [int(beam[1][i].asscalar())], score * beam[0][i].asscalar(), hidden))
+                if len(candidates) <= len(sequences):
                     break;
-                target = mx.nd.array([index[-1].asscalar()], ctx=context)
-                reply += vocab.idx2char(index[-1].asscalar())
+                sequences = sorted(candidates, key=lambda tup: tup[1], reverse=True)[:beam_size]
+
+            reply = ""
+            for seq, score, _ in random.sample(sequences, 1):
+                for token in seq[1:-1]:
+                    reply += vocab.idx2char(token)
+
             print(args.device_id, "reply:", reply)
 
             self.send_response(http.HTTPStatus.OK)
