@@ -20,18 +20,22 @@ def main(num_embed, num_hidden, num_layers, clip_gradient, batch_size, sequence_
         ckpt_argv = ckpt_lines[-1].split()
         epoch = int(ckpt_argv[0])
         best_L = float(ckpt_argv[1])
-        learning_rate = float(ckpt_argv[2])
-        epochs_no_progress = int(ckpt_argv[3])
+        optimizer = ckpt_argv[2]
+        learning_rate = float(ckpt_argv[3])
+        epochs_no_progress = int(ckpt_argv[4])
         model.load_params("model/seq2seq_lstm.params", ctx=context)
     else:
         epoch = 0
         best_L = float("Inf")
         epochs_no_progress = 0
+        optimizer = "adam"
         learning_rate = 0.001
         model.initialize(mx.init.Xavier(), ctx=context)
 
+    print("Optimizer:", optimizer)
+    print("Learning rate:", learning_rate)
     print("Training...", flush=True)
-    trainer = mx.gluon.Trainer(model.collect_params(), "adam",
+    trainer = mx.gluon.Trainer(model.collect_params(), optimizer,
                                {"learning_rate": learning_rate, "clip_gradient": clip_gradient})
     while learning_rate >= 1e-5:
         random.shuffle(dataset)
@@ -62,7 +66,7 @@ def main(num_embed, num_hidden, num_layers, clip_gradient, batch_size, sequence_
             epochs_no_progress = 0
             model.save_params("model/seq2seq_lstm.params")
             with open("model/seq2seq_lstm.ckpt", "a") as f:
-                f.write("%d %f %f %d\n" % (epoch, best_L, learning_rate, epochs_no_progress))
+                f.write("%d %f %s %f %d\n" % (epoch, best_L, optimizer, learning_rate, epochs_no_progress))
         elif epochs_no_progress < 2:
             epochs_no_progress += 1
         else:
