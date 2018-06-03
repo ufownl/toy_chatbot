@@ -94,10 +94,13 @@ class ChatbotHandler(http.server.BaseHTTPRequestHandler):
                     break;
                 sequences = sorted(candidates, key=lambda tup: tup[1], reverse=True)[:beam_size]
 
+            scores = mx.nd.array([score for _, score, _ in sequences], ctx=context)
+            probs = mx.nd.softmax(scores * 10)
+            index = mx.nd.random.multinomial(probs)
+
             reply = ""
-            for seq, score, _ in random.sample(sequences, 1):
-                for token in seq[1:-1]:
-                    reply += vocab.idx2char(token)
+            for token in sequences[index.asscalar()][0][1:-1]:
+                reply += vocab.idx2char(token)
 
             print(args.device_id, "reply:", reply)
 
