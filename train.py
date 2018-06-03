@@ -52,9 +52,8 @@ def main(num_embed, num_hidden, num_layers, clip_gradient, batch_size, sequence_
             if batch_L != batch_L:
                 raise ValueError()
             total_L += batch_L
-            if (i + 1) % 100 == 0:
-                print("[Epoch %d  Batch %d]  loss %f  elapsed %.2fs" %
-                    (epoch, i + 1, total_L / (i + 1), time.time() - ts), flush=True)
+            print("[Epoch %d  Batch %d]  batch_loss %f  average_loss %f  elapsed %.2fs" %
+                (epoch, i + 1, batch_L, total_L / (i + 1), time.time() - ts), flush=True)
         epoch += 1
 
         avg_L = total_L / (len(dataset) // batch_size)
