@@ -27,7 +27,7 @@ while True:
     if sequence_length > len(source):
         source += [vocab.char2idx("<PAD>")] * (sequence_length - len(source))
     #print(source)
-    source = mx.nd.array(source, ctx=context)
+    source = mx.nd.reverse(mx.nd.array(source, ctx=context), axis=0)
     hidden = model.begin_state(func=mx.nd.zeros, batch_size=1, ctx=context)
     hidden = model.encode(source.reshape((1, -1)).T, hidden)
     sequences = [([vocab.char2idx("<GO>")], 1.0, hidden)]

@@ -33,6 +33,7 @@ def rnn_batches(dataset, vocab, batch_size, sequence_length, ctx):
     for i in range(0, len(dataset) // batch_size):
         start = i * batch_size
         src_bat = mx.nd.array(_pad_batch(src_tok[start: start + batch_size], vocab, sequence_length), ctx=ctx)
+        src_bat = mx.nd.reverse(src_bat, axis=1)
         tgt_bat = mx.nd.array(_pad_batch(_add_sent_prefix(tgt_tok[start: start + batch_size], vocab), vocab, sequence_length + 1), ctx=ctx)
         lbl_bat = mx.nd.array(_pad_batch(_add_sent_suffix(tgt_tok[start: start + batch_size], vocab), vocab, sequence_length + 1), ctx=ctx)
         yield src_bat.T, tgt_bat.T, lbl_bat.T.reshape((-1,))
