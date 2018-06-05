@@ -54,11 +54,11 @@ def _pad_batch(batch, vocab, seq_len):
 if __name__ == "__main__":
     dataset = load_conversations("data/xiaohuangji50w_nofenci.conv")
     print("dataset size: ", len(dataset))
-    dataset = dataset_filter(dataset, 16)
+    dataset = dataset_filter(dataset, 64)
     print("filtered dataset size: ", len(dataset))
     print("dataset preview: ", dataset[:10])
     vocab = make_vocab(dataset)
     print("vocab size: ", vocab.size())
     dataset = tokenize(dataset, vocab)
     print("tokenize dataset preview: ", dataset[:10])
-    print("batch preview: ", next(rnn_batches(dataset, vocab, 5, 16, mx.cpu())))
+    print("batch preview: ", next(rnn_batches(dataset, vocab, 4, 64, mx.cpu())))

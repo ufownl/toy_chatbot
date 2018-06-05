@@ -74,7 +74,7 @@ def main(num_embed, num_hidden, num_layers, batch_size, sequence_length, context
 if __name__ == "__main__":
     while True:
         try:
-            main(num_embed=128, num_hidden=1024, num_layers=2, batch_size=256, sequence_length=16, context=mx.gpu())
+            main(num_embed=128, num_hidden=1024, num_layers=2, batch_size=256, sequence_length=64, context=mx.gpu())
             break;
         except ValueError:
             print("Oops! The value of loss become NaN...")

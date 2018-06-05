@@ -6,7 +6,7 @@ context = mx.cpu()
 num_embed = 128
 num_hidden = 1024
 num_layers = 2
-sequence_length = 16
+sequence_length = 64
 beam_size = 5
 
 print("Loading dataset...", flush=True)
