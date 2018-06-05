@@ -8,7 +8,7 @@ import mxnet as mx
 from dataset import load_conversations, dataset_filter, make_vocab
 from seq2seq_lstm import Seq2seqLSTM
 
-parser = argparse.ArgumentParser(description='Start a test http server.')
+parser = argparse.ArgumentParser(description="Start a test http server.")
 parser.add_argument("--addr", help="set address of chatbot server (default: 0.0.0.0)", type=str, default="0.0.0.0")
 parser.add_argument("--port", help="set port of chatbot server (default: 80)", type=int, default=80)
 parser.add_argument("--device_id", help="select device that the model using (default: 0)", type=int, default=0)
