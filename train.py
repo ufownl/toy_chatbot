@@ -40,21 +40,21 @@ def main(num_embed, num_hidden, num_layers, batch_size, sequence_length, context
         ts = time.time()
         total_L = 0.0
         batch = 0
-        for bucket, max_len in rnn_buckets(dataset, [2 ** (i + 1) for i in range(int(math.log(sequence_length, 2)))]):
-            for source, target, label in rnn_batches(bucket, vocab, batch_size, sequence_length, max_len, context):
+        for bucket, src_len, tgt_len in rnn_buckets(dataset, [2 ** (i + 1) for i in range(int(math.log(sequence_length, 2)))]):
+            for source, target, label in rnn_batches(bucket, vocab, batch_size, src_len, tgt_len, context):
                 batch += 1
-                hidden = model.begin_state(func=mx.nd.zeros, batch_size=batch_size, ctx=context)
+                hidden = model.begin_state(func=mx.nd.zeros, batch_size=source.shape[1], ctx=context)
                 with mx.autograd.record():
                     output, hidden = model(source, target, hidden)
                     L = loss(output, label)
                     L.backward()
-                trainer.step(batch_size)
+                trainer.step(source.shape[1])
                 batch_L = mx.nd.mean(L).asscalar()
                 if batch_L != batch_L:
                     raise ValueError()
                 total_L += batch_L
-                print("[Epoch %d  Bucket %d  Batch %d]  batch_loss %.10f  average_loss %.10f  elapsed %.2fs" %
-                    (epoch, max_len, batch, batch_L, total_L / batch, time.time() - ts), flush=True)
+                print("[Epoch %d  Bucket (%d, %d)  Batch %d]  batch_loss %.10f  average_loss %.10f  elapsed %.2fs" %
+                    (epoch, src_len, tgt_len, batch, batch_L, total_L / batch, time.time() - ts), flush=True)
         epoch += 1
 
         avg_L = total_L / batch

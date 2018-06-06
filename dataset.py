@@ -28,17 +28,26 @@ def tokenize(dataset, vocab):
 
 
 def rnn_buckets(dataset, buckets):
-    min_len = 0
-    for max_len in buckets:
-        bucket = [(src, tgt) for src, tgt in dataset if len(tgt) > min_len and len(tgt) <= max_len]
-        min_len = max_len
-        yield bucket, max_len
+    min_src_len = -1
+    for max_src_len in buckets:
+        src_bucket = [(src, tgt) for src, tgt in dataset if len(src) > min_src_len and len(src) <= max_src_len]
+        min_src_len = max_src_len
+        if len(src_bucket) > 0:
+            min_tgt_len = -1
+            for max_tgt_len in buckets:
+                tgt_bucket = [(src, tgt) for src, tgt in src_bucket if len(tgt) > min_tgt_len and len(tgt) <= max_tgt_len]
+                min_tgt_len = max_tgt_len
+                if len(tgt_bucket) > 0:
+                    yield tgt_bucket, max_src_len, max_tgt_len
 
 
 def rnn_batches(dataset, vocab, batch_size, source_length, target_length, ctx):
     src_tok, tgt_tok = zip(*dataset)
     src_tok, tgt_tok = list(src_tok), list(tgt_tok)
-    for i in range(0, len(dataset) // batch_size):
+    batches = len(dataset) // batch_size
+    if batches * batch_size < len(dataset):
+        batches += 1
+    for i in range(0, batches):
         start = i * batch_size
         src_bat = mx.nd.array(_pad_batch(src_tok[start: start + batch_size], vocab, source_length), ctx=ctx)
         src_bat = mx.nd.reverse(src_bat, axis=1)
@@ -69,5 +78,5 @@ if __name__ == "__main__":
     print("vocab size: ", vocab.size())
     dataset = tokenize(dataset, vocab)
     print("tokenize dataset preview: ", dataset[:10])
-    print("buckets preview: ", [(len(bucket), max_len) for bucket, max_len in rnn_buckets(dataset, [2, 4, 8, 16, 32, 64])])
+    print("buckets preview: ", [(len(bucket), (src_len, tgt_len)) for bucket, src_len, tgt_len in rnn_buckets(dataset, [2, 4, 8, 16, 32, 64])])
     print("batch preview: ", next(rnn_batches(dataset, vocab, 4, 64, 64, mx.cpu())))
