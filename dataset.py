@@ -27,6 +27,14 @@ def tokenize(dataset, vocab):
     return [tuple([vocab.char2idx(ch) for ch in sent] for sent in conv) for conv in dataset]
 
 
+def rnn_buckets(dataset, buckets):
+    min_len = 0
+    for max_len in buckets:
+        bucket = [(src, tgt) for src, tgt in dataset if len(tgt) > min_len and len(tgt) <= max_len]
+        min_len = max_len
+        yield bucket, max_len
+
+
 def rnn_batches(dataset, vocab, batch_size, sequence_length, ctx):
     src_tok, tgt_tok = zip(*dataset)
     src_tok, tgt_tok = list(src_tok), list(tgt_tok)
@@ -61,4 +69,5 @@ if __name__ == "__main__":
     print("vocab size: ", vocab.size())
     dataset = tokenize(dataset, vocab)
     print("tokenize dataset preview: ", dataset[:10])
+    print("buckets preview: ", [(len(bucket), max_len) for bucket, max_len in rnn_buckets(dataset, [2, 4, 8, 16, 32, 64])])
     print("batch preview: ", next(rnn_batches(dataset, vocab, 4, 64, mx.cpu())))
