@@ -1,8 +1,9 @@
 import os
 import time
+import math
 import random
 import mxnet as mx
-from dataset import load_conversations, dataset_filter, make_vocab, tokenize, rnn_batches
+from dataset import load_conversations, dataset_filter, make_vocab, tokenize, rnn_buckets, rnn_batches
 from seq2seq_lstm import Seq2seqLSTM
 
 def main(num_embed, num_hidden, num_layers, batch_size, sequence_length, context):
@@ -38,22 +39,25 @@ def main(num_embed, num_hidden, num_layers, batch_size, sequence_length, context
         random.shuffle(dataset)
         ts = time.time()
         total_L = 0.0
-        for i, (source, target, label) in enumerate(rnn_batches(dataset, vocab, batch_size, sequence_length, context)):
-            hidden = model.begin_state(func=mx.nd.zeros, batch_size=batch_size, ctx=context)
-            with mx.autograd.record():
-                output, hidden = model(source, target, hidden)
-                L = loss(output, label)
-                L.backward()
-            trainer.step(batch_size)
-            batch_L = mx.nd.mean(L).asscalar()
-            if batch_L != batch_L:
-                raise ValueError()
-            total_L += batch_L
-            print("[Epoch %d  Batch %d]  batch_loss %.10f  average_loss %.10f  elapsed %.2fs" %
-                (epoch, i + 1, batch_L, total_L / (i + 1), time.time() - ts), flush=True)
+        batch = 0
+        for bucket, max_len in rnn_buckets(dataset, [2 ** (i + 1) for i in range(int(math.log(sequence_length, 2)))]):
+            for source, target, label in rnn_batches(bucket, vocab, batch_size, sequence_length, max_len, context):
+                batch += 1
+                hidden = model.begin_state(func=mx.nd.zeros, batch_size=batch_size, ctx=context)
+                with mx.autograd.record():
+                    output, hidden = model(source, target, hidden)
+                    L = loss(output, label)
+                    L.backward()
+                trainer.step(batch_size)
+                batch_L = mx.nd.mean(L).asscalar()
+                if batch_L != batch_L:
+                    raise ValueError()
+                total_L += batch_L
+                print("[Epoch %d  Bucket %d  Batch %d]  batch_loss %.10f  average_loss %.10f  elapsed %.2fs" %
+                    (epoch, max_len, batch, batch_L, total_L / batch, time.time() - ts), flush=True)
         epoch += 1
 
-        avg_L = total_L / (len(dataset) // batch_size)
+        avg_L = total_L / batch
         print("[Epoch %d]  learning_rate %.10f  loss %.10f  epochs_no_progress %d  duration %.2fs" %
             (epoch, learning_rate, avg_L, epochs_no_progress, time.time() - ts), flush=True)
 
