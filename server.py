@@ -1,11 +1,12 @@
 import sys
 import re
+import math
 import random
 import argparse
 import http.server
 import urllib.parse
 import mxnet as mx
-from dataset import load_conversations, dataset_filter, make_vocab
+from dataset import load_conversations, dataset_filter, make_vocab, pad_sentence
 from seq2seq_lstm import Seq2seqLSTM
 
 parser = argparse.ArgumentParser(description="Start a test http server.")
@@ -71,8 +72,7 @@ class ChatbotHandler(http.server.BaseHTTPRequestHandler):
 
             print(args.device_id, "say:", content)
             source = [vocab.char2idx(ch) for ch in content]
-            if sequence_length > len(source):
-                source += [vocab.char2idx("<PAD>")] * (sequence_length - len(source))
+            source = pad_sentence(source, vocab, [2 ** (i + 1) for i in range(int(math.log(sequence_length, 2)))])
             print(args.device_id, "tokenize:", source)
             source = mx.nd.reverse(mx.nd.array(source, ctx=context), axis=0)
             hidden = model.begin_state(func=mx.nd.zeros, batch_size=1, ctx=context)

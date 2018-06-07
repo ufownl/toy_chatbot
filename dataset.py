@@ -56,6 +56,15 @@ def rnn_batches(dataset, vocab, batch_size, source_length, target_length, ctx):
         yield src_bat.T, tgt_bat.T, lbl_bat.T.reshape((-1,))
 
 
+def pad_sentence(sent, vocab, buckets):
+    min_len = -1
+    for max_len in buckets:
+        if len(sent) > min_len and len(sent) <= max_len:
+            return sent + [vocab.char2idx("<PAD>")] * (max_len - len(sent))
+        min_len = max_len
+    return sent
+
+
 def _add_sent_prefix(batch, vocab):
     return [[vocab.char2idx("<GO>")] + sent for sent in batch]
 

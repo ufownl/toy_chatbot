@@ -1,5 +1,6 @@
+import math
 import mxnet as mx
-from dataset import load_conversations, dataset_filter, make_vocab
+from dataset import load_conversations, dataset_filter, make_vocab, pad_sentence
 from seq2seq_lstm import Seq2seqLSTM
 
 context = mx.cpu()
@@ -24,9 +25,8 @@ while True:
         print("")
         break;
     source = [vocab.char2idx(ch) for ch in source]
-    if sequence_length > len(source):
-        source += [vocab.char2idx("<PAD>")] * (sequence_length - len(source))
-    #print(source)
+    source = pad_sentence(source, vocab, [2 ** (i + 1) for i in range(int(math.log(sequence_length, 2)))])
+    print(source)
     source = mx.nd.reverse(mx.nd.array(source, ctx=context), axis=0)
     hidden = model.begin_state(func=mx.nd.zeros, batch_size=1, ctx=context)
     hidden = model.encode(source.reshape((1, -1)).T, hidden)
