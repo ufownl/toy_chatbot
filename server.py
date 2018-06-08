@@ -1,7 +1,7 @@
 import sys
 import re
 import math
-import random
+import time
 import argparse
 import http.server
 import urllib.parse
@@ -25,6 +25,8 @@ num_hidden = 1024
 num_layers = 2
 sequence_length = 64
 beam_size = 5
+
+mx.random.seed(int(time.time()) + args.device_id)
 
 print("Loading dataset...", flush=True)
 dataset = dataset_filter(load_conversations("data/xiaohuangji50w_nofenci.conv"), sequence_length)
