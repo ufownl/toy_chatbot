@@ -24,7 +24,7 @@ num_embed = 128
 num_hidden = 1024
 num_layers = 2
 sequence_length = 64
-beam_size = 5
+beam_size = 10
 
 mx.random.seed(int(time.time()) + args.device_id)
 

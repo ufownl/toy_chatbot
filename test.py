@@ -8,7 +8,7 @@ num_embed = 128
 num_hidden = 1024
 num_layers = 2
 sequence_length = 64
-beam_size = 5
+beam_size = 10
 
 print("Loading dataset...", flush=True)
 dataset = dataset_filter(load_conversations("data/xiaohuangji50w_nofenci.conv"), sequence_length)
