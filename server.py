@@ -79,7 +79,7 @@ class ChatbotHandler(http.server.BaseHTTPRequestHandler):
             source = mx.nd.reverse(mx.nd.array(source, ctx=context), axis=0)
             hidden = model.begin_state(func=mx.nd.zeros, batch_size=1, ctx=context)
             hidden = model.encode(source.reshape((1, -1)).T, hidden)
-            sequences = [([vocab.char2idx("<GO>")], 1.0, hidden)]
+            sequences = [([vocab.char2idx("<GO>")], 0.0, hidden)]
             while True:
                 candidates = []
                 for seq, score, hidden in sequences:
@@ -91,13 +91,13 @@ class ChatbotHandler(http.server.BaseHTTPRequestHandler):
                         probs = mx.nd.softmax(output, axis=1)
                         beam = probs.reshape((-1,)).topk(k=beam_size, ret_typ="both")
                         for i in range(beam_size):
-                            candidates.append((seq + [int(beam[1][i].asscalar())], score * beam[0][i].asscalar(), hidden))
+                            candidates.append((seq + [int(beam[1][i].asscalar())], score + math.log(beam[0][i].asscalar()), hidden))
                 if len(candidates) <= len(sequences):
                     break;
                 sequences = sorted(candidates, key=lambda tup: tup[1], reverse=True)[:beam_size]
 
             scores = mx.nd.array([score for _, score, _ in sequences], ctx=context)
-            probs = mx.nd.softmax(scores * 10)
+            probs = mx.nd.softmax(scores)
             index = mx.nd.random.multinomial(probs)
 
             reply = ""

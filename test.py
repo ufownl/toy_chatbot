@@ -30,7 +30,7 @@ while True:
     source = mx.nd.reverse(mx.nd.array(source, ctx=context), axis=0)
     hidden = model.begin_state(func=mx.nd.zeros, batch_size=1, ctx=context)
     hidden = model.encode(source.reshape((1, -1)).T, hidden)
-    sequences = [([vocab.char2idx("<GO>")], 1.0, hidden)]
+    sequences = [([vocab.char2idx("<GO>")], 0.0, hidden)]
     while True:
         candidates = []
         for seq, score, hidden in sequences:
@@ -42,13 +42,16 @@ while True:
                 probs = mx.nd.softmax(output, axis=1)
                 beam = probs.reshape((-1,)).topk(k=beam_size, ret_typ="both")
                 for i in range(beam_size):
-                    candidates.append((seq + [int(beam[1][i].asscalar())], score * beam[0][i].asscalar(), hidden))
+                    candidates.append((seq + [int(beam[1][i].asscalar())], score + math.log(beam[0][i].asscalar()), hidden))
         if len(candidates) <= len(sequences):
             break;
         sequences = sorted(candidates, key=lambda tup: tup[1], reverse=True)[:beam_size]
 
-    for seq, score, _ in sequences:
+    scores = mx.nd.array([score for _, score, _ in sequences], ctx=context)
+    probs = mx.nd.softmax(scores)
+
+    for i, (seq, score, _) in enumerate(sequences):
         text = ""
         for token in seq[1:-1]:
             text += vocab.idx2char(token)
-        print(text, score)
+        print(text, score, probs[i].asscalar())
