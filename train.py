@@ -40,6 +40,7 @@ def main(num_embed, num_hidden, num_layers, batch_size, sequence_length, context
         ts = time.time()
         total_L = 0.0
         batch = 0
+        ppl = mx.metric.Perplexity(ignore_label=None)
         for bucket, src_len, tgt_len in rnn_buckets(dataset, [2 ** (i + 1) for i in range(int(math.log(sequence_length, 2)))]):
             for source, target, label in rnn_batches(bucket, vocab, batch_size, src_len, tgt_len, context):
                 batch += 1
@@ -53,13 +54,15 @@ def main(num_embed, num_hidden, num_layers, batch_size, sequence_length, context
                 if batch_L != batch_L:
                     raise ValueError()
                 total_L += batch_L
+                probs = mx.nd.softmax(output, axis=1)
+                ppl.update([label], [probs])
                 print("[Epoch %d  Bucket (%d, %d)  Batch %d]  batch_loss %.10f  average_loss %.10f  elapsed %.2fs" %
                     (epoch, src_len, tgt_len, batch, batch_L, total_L / batch, time.time() - ts), flush=True)
         epoch += 1
 
         avg_L = total_L / batch
-        print("[Epoch %d]  learning_rate %.10f  loss %.10f  epochs_no_progress %d  duration %.2fs" %
-            (epoch, learning_rate, avg_L, epochs_no_progress, time.time() - ts), flush=True)
+        print("[Epoch %d]  learning_rate %.10f  loss %.10f  %s %f  epochs_no_progress %d  duration %.2fs" %
+            (epoch, learning_rate, avg_L, ppl.get()[0], ppl.get()[1], epochs_no_progress, time.time() - ts), flush=True)
 
         if avg_L < best_L:
             best_L = avg_L
