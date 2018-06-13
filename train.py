@@ -2,11 +2,12 @@ import os
 import time
 import math
 import random
+import argparse
 import mxnet as mx
 from dataset import load_conversations, dataset_filter, make_vocab, tokenize, rnn_buckets, rnn_batches
 from seq2seq_lstm import Seq2seqLSTM
 
-def main(num_embed, num_hidden, num_layers, batch_size, sequence_length, context):
+def main(num_embed, num_hidden, num_layers, batch_size, sequence_length, context, sgd=False):
     print("Loading dataset...", flush=True)
     dataset = dataset_filter(load_conversations("data/xiaohuangji50w_nofenci.conv"), sequence_length)
     vocab = make_vocab(dataset)
@@ -32,9 +33,15 @@ def main(num_embed, num_hidden, num_layers, batch_size, sequence_length, context
         model.initialize(mx.init.Xavier(), ctx=context)
 
     print("Learning rate:", learning_rate)
+    if sgd:
+        print("Optimizer: SGD")
+        trainer = mx.gluon.Trainer(model.collect_params(), "SGD",
+                                   {"learning_rate": learning_rate, "momentum": 0.5, "clip_gradient": 5.0})
+    else:
+        print("Optimizer: Adam")
+        trainer = mx.gluon.Trainer(model.collect_params(), "Adam",
+                                   {"learning_rate": learning_rate, "clip_gradient": 5.0})
     print("Training...", flush=True)
-    trainer = mx.gluon.Trainer(model.collect_params(), "Adam",
-                               {"learning_rate": learning_rate, "clip_gradient": 5.0})
     while learning_rate >= 1e-8:
         random.shuffle(dataset)
         ts = time.time()
@@ -79,9 +86,13 @@ def main(num_embed, num_hidden, num_layers, batch_size, sequence_length, context
 
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Start a chatbot trainer.")
+    parser.add_argument("--sgd", help="using sgd optimizer", action="store_true")
+    args = parser.parse_args()
+
     while True:
         try:
-            main(num_embed=128, num_hidden=1024, num_layers=2, batch_size=256, sequence_length=64, context=mx.gpu())
+            main(num_embed=128, num_hidden=1024, num_layers=2, batch_size=256, sequence_length=64, context=mx.gpu(), sgd=args.sgd)
             break;
         except ValueError:
             print("Oops! The value of loss become NaN...")
