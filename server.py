@@ -6,7 +6,8 @@ import argparse
 import http.server
 import urllib.parse
 import mxnet as mx
-from dataset import load_conversations, dataset_filter, make_vocab, pad_sentence
+from vocab import Vocabulary
+from dataset import pad_sentence
 from seq2seq_lstm import Seq2seqLSTM
 
 parser = argparse.ArgumentParser(description="Start a test http server.")
@@ -28,9 +29,9 @@ beam_size = 10
 
 mx.random.seed(int(time.time()) + args.device_id)
 
-print("Loading dataset...", flush=True)
-dataset = dataset_filter(load_conversations("data/xiaohuangji50w_nofenci.conv"), sequence_length)
-vocab = make_vocab(dataset)
+print("Loading vocabulary...", flush=True)
+vocab = Vocabulary()
+vocab.load("data/vocabulary.json")
 
 print("Loading model...", flush=True)
 model = Seq2seqLSTM(vocab.size(), num_embed, num_hidden, num_layers)

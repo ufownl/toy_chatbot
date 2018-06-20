@@ -11,6 +11,7 @@ def main(num_embed, num_hidden, num_layers, batch_size, sequence_length, context
     print("Loading dataset...", flush=True)
     dataset = dataset_filter(load_conversations("data/xiaohuangji50w_nofenci.conv"), sequence_length)
     vocab = make_vocab(dataset)
+    vocab.save("data/vocabulary.json")
     dataset = tokenize(dataset, vocab)
 
     model = Seq2seqLSTM(vocab.size(), num_embed, num_hidden, num_layers)
