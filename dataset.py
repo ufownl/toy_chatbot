@@ -1,3 +1,4 @@
+import jieba
 import mxnet as mx
 from vocab import Vocabulary
 
@@ -9,7 +10,7 @@ def load_conversations(path):
     for conv in raw.split("E\n")[1:]:
         qa = conv.split("\n")
         if len(qa) >= 2:
-            dataset.append((qa[0][2:], qa[1][2:]))
+            dataset.append((list(jieba.cut(qa[0][2:])), list(jieba.cut(qa[1][2:]))))
 
     return dataset
 
