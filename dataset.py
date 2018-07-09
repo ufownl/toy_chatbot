@@ -19,9 +19,16 @@ def dataset_filter(dataset, sequence_length):
     return [(src, tgt) for src, tgt in dataset if len(src) <= sequence_length and len(tgt) <= sequence_length]
 
 
-def make_vocab(dataset):
-    chars = sorted(list(set([ch for conv in dataset for sent in conv for ch in sent])))
-    return Vocabulary(chars)
+def make_vocab(dataset, max_size=8192):
+    freq = {}
+    chars = [ch for conv in dataset for sent in conv for ch in sent]
+    for ch in chars:
+        if ch in freq:
+            freq[ch] += 1
+        else:
+            freq[ch] = 1
+    freq = sorted(freq.items(), key=lambda tup: tup[1], reverse=True)
+    return Vocabulary([k for k, _ in freq[:max_size]])
 
 
 def tokenize(dataset, vocab):
