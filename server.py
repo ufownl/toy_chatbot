@@ -74,17 +74,17 @@ class ChatbotHandler(http.server.BaseHTTPRequestHandler):
                 return
 
             print(args.device_id, "say:", content)
-            source = [vocab.char2idx(ch) for ch in content]
+            source = [vocab.word2idx(w) for w in content]
             source = pad_sentence(source, vocab, [2 ** (i + 1) for i in range(int(math.log(sequence_length, 2)))])
             print(args.device_id, "tokenize:", source)
             source = mx.nd.reverse(mx.nd.array(source, ctx=context), axis=0)
             hidden = model.begin_state(func=mx.nd.zeros, batch_size=1, ctx=context)
             hidden = model.encode(source.reshape((1, -1)).T, hidden)
-            sequences = [([vocab.char2idx("<GO>")], 0.0, hidden)]
+            sequences = [([vocab.word2idx("<GO>")], 0.0, hidden)]
             while True:
                 candidates = []
                 for seq, score, hidden in sequences:
-                    if seq[-1] == vocab.char2idx("<EOS>"):
+                    if seq[-1] == vocab.word2idx("<EOS>"):
                         candidates.append((seq, score, hidden))
                     else:
                         target = mx.nd.array([seq[-1]], ctx=context)
@@ -103,7 +103,7 @@ class ChatbotHandler(http.server.BaseHTTPRequestHandler):
 
             reply = ""
             for token in sequences[index.asscalar()][0][1:-1]:
-                reply += vocab.idx2char(token)
+                reply += vocab.idx2word(token)
 
             print(args.device_id, "reply:", reply)
 

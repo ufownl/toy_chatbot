@@ -21,18 +21,18 @@ def dataset_filter(dataset, sequence_length):
 
 def make_vocab(dataset, max_size=8192):
     freq = {}
-    chars = [ch for conv in dataset for sent in conv for ch in sent]
-    for ch in chars:
-        if ch in freq:
-            freq[ch] += 1
+    words = [w for conv in dataset for sent in conv for w in sent]
+    for w in words:
+        if w in freq:
+            freq[w] += 1
         else:
-            freq[ch] = 1
+            freq[w] = 1
     freq = sorted(freq.items(), key=lambda tup: tup[1], reverse=True)
     return Vocabulary([k for k, _ in freq[:max_size]])
 
 
 def tokenize(dataset, vocab):
-    return [tuple([vocab.char2idx(ch) for ch in sent] for sent in conv) for conv in dataset]
+    return [tuple([vocab.word2idx(w) for w in sent] for sent in conv) for conv in dataset]
 
 
 def rnn_buckets(dataset, buckets):
@@ -68,21 +68,21 @@ def pad_sentence(sent, vocab, buckets):
     min_len = -1
     for max_len in buckets:
         if len(sent) > min_len and len(sent) <= max_len:
-            return sent + [vocab.char2idx("<PAD>")] * (max_len - len(sent))
+            return sent + [vocab.word2idx("<PAD>")] * (max_len - len(sent))
         min_len = max_len
     return sent
 
 
 def _add_sent_prefix(batch, vocab):
-    return [[vocab.char2idx("<GO>")] + sent for sent in batch]
+    return [[vocab.word2idx("<GO>")] + sent for sent in batch]
 
 
 def _add_sent_suffix(batch, vocab):
-    return [sent + [vocab.char2idx("<EOS>")] for sent in batch]
+    return [sent + [vocab.word2idx("<EOS>")] for sent in batch]
 
 
 def _pad_batch(batch, vocab, seq_len):
-    return [sent + [vocab.char2idx("<PAD>")] * (seq_len - len(sent)) for sent in batch]
+    return [sent + [vocab.word2idx("<PAD>")] * (seq_len - len(sent)) for sent in batch]
 
 
 if __name__ == "__main__":
