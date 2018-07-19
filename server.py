@@ -35,7 +35,7 @@ vocab.load("data/vocabulary.json")
 
 print("Loading model...", flush=True)
 model = Seq2seqLSTM(vocab.size(), num_embed, num_hidden, num_layers)
-model.load_params("model/seq2seq_lstm.params", ctx=context)
+model.load_parameters("model/seq2seq_lstm.params", ctx=context)
 
 print("Done.", flush=True)
 

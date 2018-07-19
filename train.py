@@ -25,7 +25,7 @@ def main(num_embed, num_hidden, num_layers, batch_size, sequence_length, context
         best_L = float(ckpt_argv[1])
         learning_rate = float(ckpt_argv[2])
         epochs_no_progress = int(ckpt_argv[3])
-        model.load_params("model/seq2seq_lstm.params", ctx=context)
+        model.load_parameters("model/seq2seq_lstm.params", ctx=context)
     else:
         epoch = 0
         best_L = float("Inf")
